@@ -1,0 +1,24 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "baseUrl": "src",
+        "target": "es2020",
+        "outDir": "dist",
+        "alwaysStrict": true,
+        "removeComments": true,
+        "strictNullChecks": true,
+        "noImplicitAny": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "sourceMap": true
+    },
+    "include": [
+        "./src"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/*.spec.ts",
+        "**/__test__"
+    ]
+}
