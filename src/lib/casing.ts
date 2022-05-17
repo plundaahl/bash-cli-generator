@@ -37,3 +37,9 @@ export const padStart = (param: string, length: number) =>
     param.padStart(length, ' ')
 
 export const spaces = (length: number) => ''.padEnd(length, ' ')
+
+export const indent = (text: string, depth: number) =>
+    text
+        .split('\n')
+        .map((line) => (line.length > 0 ? `${spaces(depth)}${line}` : line))
+        .join('\n')

@@ -6,6 +6,7 @@ import {
     pascalCase,
     kebabCase,
     camelCase,
+    indent,
 } from './casing'
 
 describe('capitalize', () => {
@@ -56,5 +57,11 @@ describe('kebabCase', () => {
         ['FOO BAR BAZ', 'foo-bar-baz'],
     ])('Transforms "%s" to "%s"', (input, expected) => {
         expect(kebabCase(input)).toBe(expected)
+    })
+})
+
+describe('indent', () => {
+    test('single line', () => {
+        expect(indent('foo', 4)).toBe('    foo')
     })
 })
