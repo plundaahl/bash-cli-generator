@@ -8,11 +8,14 @@ test('Main E2E Test', () => {
                     name: 'Flag',
                     alias: 'f',
                     documentation: 'Some flag description',
+                    type: 'flag',
                 },
                 {
                     name: 'Param',
                     alias: 'p',
                     documentation: 'Some param description',
+                    type: 'param',
+                    required: true,
                 },
             ],
         }),
@@ -52,7 +55,7 @@ main() {
         case "\${1-}" in
         -h | --help         ) usage ;;
         -v | --verbose      ) VERBOSE=1 ;;
-        -f | --flag         ) FLAGF=1 ;;
+        -f | --flag         ) FLAG=1 ;;
         -p | --param        ) PARAM="\${2-}" ; shift ;;
         -?*                 ) die "Unknown option: $1" ;;
         *                   ) ARGS+=("\${1-}") ;;

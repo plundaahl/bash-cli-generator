@@ -29,6 +29,11 @@ export const camelCase = pipe(
     (str: string) => lowercase(str.slice(0, 1)) + str.slice(1),
 )
 
+const prefixWithOptionDash = (str: string) =>
+    str.length === 1 ? `-${str}` : `--${str}`
+
+export const optionCase = pipe(kebabCase, prefixWithOptionDash)
+
 // String
 export const padEnd = (param: string, length: number) =>
     param.padEnd(length, ' ')
@@ -43,3 +48,6 @@ export const indent = (text: string, depth: number) =>
         .split('\n')
         .map((line) => (line.length > 0 ? `${spaces(depth)}${line}` : line))
         .join('\n')
+
+// Numbers
+export const max = (a: number, b: number) => Math.max(a, b)
