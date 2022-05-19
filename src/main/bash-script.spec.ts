@@ -1,7 +1,22 @@
-import { generateBashScript } from './bash-script'
+import { generateBashScript } from './bash-script.generator'
 
 test('Main E2E Test', () => {
-    expect(generateBashScript()).toBe(
+    expect(
+        generateBashScript({
+            options: [
+                {
+                    name: 'Flag',
+                    alias: 'f',
+                    documentation: 'Some flag description',
+                },
+                {
+                    name: 'Param',
+                    alias: 'p',
+                    documentation: 'Some param description',
+                },
+            ],
+        }),
+    ).toBe(
         `#!/usr/bin/env bash
 
 set -Eeuo pipefail

@@ -1,12 +1,42 @@
-import { indent } from '../lib/casing'
+import { indent, kebabCase } from '../lib/casing'
+import { BashScript, Option } from './bash-script.schema'
 
-export const generateOptionDocs = () =>
-    `-h, --help      Print this help and exit
--v, --verbose   Print script debug info
--f, --flag      Some flag description
--p, --param     Some param description`
+const SPACE = ' '
+const WRAP_COLUMN = 80
 
-export const generateUsage = () =>
+export const generateOptionDocs = (schema: Option[]) => {
+    const allOptions: Option[] = [
+        { name: 'help', alias: 'h', documentation: 'Print this help and exit' },
+        {
+            name: 'verbose',
+            alias: 'v',
+            documentation: 'Print script debug info',
+        },
+        ...schema,
+    ]
+
+    const optionsIr = allOptions.map(({ alias, name, documentation }) => ({
+        docs: documentation,
+        name: [alias, name]
+            .filter(Boolean)
+            .map(kebabCase)
+            .map((text) => (text.length === 1 ? `-${text}` : `--${text}`))
+            .join(', '),
+    }))
+
+    const longestOptionText = optionsIr.reduce(
+        (maxLength, option) => Math.max(option.name.length, maxLength),
+        0,
+    )
+
+    const docsColumn = Math.ceil(longestOptionText / 4) * 4
+
+    return optionsIr
+        .map(({ name, docs }) => `${name.padEnd(docsColumn)}${docs}`)
+        .join('\n')
+}
+
+export const generateUsage = (schema: BashScript) =>
     `usage() {
     cat <<EOF
 Usage: $(basename "\${BASH_SOURCE[0]}") [-h] [-v] [-f] -p param_value arg1 [arg2...]
@@ -15,7 +45,7 @@ Script description here.
 
 Available options:
 
-${generateOptionDocs()}
+${generateOptionDocs(schema.options)}
 EOF
   exit
 }`
@@ -60,7 +90,7 @@ ${generatePositionalParseStatements()}
 ${generateArgValidators()}`
 
 // MAIN FUNCTION
-export const generateBashScript = () =>
+export const generateBashScript = (schema: BashScript) =>
     `#!/usr/bin/env bash
 
 set -Eeuo pipefail
@@ -68,7 +98,7 @@ trap cleanup SIGINT SIGTERM ERR EXIT
 
 SCRIPT_DIR=$(cd "$(dirname "\${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 
-${generateUsage()}
+${generateUsage(schema)}
 
 main() {
 ${indent(generateArgParser(), 4)}
