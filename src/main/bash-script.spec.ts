@@ -15,7 +15,9 @@ test('Main E2E Test', () => {
                     alias: 'p',
                     documentation: 'Some param description',
                     type: 'param',
-                    required: true,
+                    validation: {
+                        required: true,
+                    },
                 },
             ],
         }),

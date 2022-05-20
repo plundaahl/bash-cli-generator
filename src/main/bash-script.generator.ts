@@ -1,4 +1,4 @@
-import { indent, max, constCase, optionCase } from '../lib/casing'
+import { indent, max, constCase, optionCase, kebabCase } from '../lib/casing'
 import { BashScript, Option } from './bash-script.schema'
 
 const nextColumnGivenLength = (len: number) => Math.ceil((len + 1) / 4) * 4
@@ -102,9 +102,24 @@ export const generateArgParseStatements = (schema: Option[]) => {
 export const generatePositionalParseStatements = () =>
     `local FIRST_ARG="\${ARGS[0]-}"; ARGS=("\${ARGS[@]:1}") # shift array`
 
-export const generateArgValidators = () =>
-    `[[ -z "\${PARAM-}" ]] && die "Missing required parameter: param"
+export const generateArgValidators = (schema: BashScript) => {
+    const paramIrs = schema.options
+        .filter((opt) => opt.type === 'param' && opt.validation)
+        .flatMap((opt: Option & { type: 'param' }) => {
+            if (opt.validation?.required) {
+                const varName = constCase(opt.name)
+                const optName = kebabCase(opt.name)
+                const condition = `[[ -z "\${${varName}-}" ]]`
+                const message = `die "Missing required parameter: ${optName}"`
+                return `${condition} && ${message}`
+            }
+        })
+        .filter(Boolean)
+
+    return `# check required params and arguments
+${paramIrs.join('\n')}
 [[ -z "\${FIRST_ARG-}" ]] && die "Missing argument: first arg"`
+}
 
 export const generateArgParser = (schema: BashScript) =>
     `# Default values
@@ -120,10 +135,7 @@ ${indent(generateArgParseStatements(schema.options), 4)}
 done
 
 # Positional args
-${generatePositionalParseStatements()}
-
-# check required params and arguments
-${generateArgValidators()}`
+${generatePositionalParseStatements()}`
 
 // MAIN FUNCTION
 export const generateBashScript = (schema: BashScript) =>
@@ -138,6 +150,8 @@ ${generateUsage(schema)}
 
 main() {
 ${indent(generateArgParser(schema), 4)}
+
+${indent(generateArgValidators(schema), 4)}
 
     action
 
