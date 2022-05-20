@@ -2,6 +2,7 @@ export type Option = {
     name: string
     alias?: string
     documentation: string
+    global?: boolean
 } & (
     | {
           type: 'flag'
@@ -12,6 +13,10 @@ export type Option = {
           validation?: {
               required?: boolean
           }
+      }
+    | {
+          type: 'immediate'
+          action: string
       }
 )
 

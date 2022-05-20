@@ -2,25 +2,27 @@ import { indent, max, constCase, optionCase, kebabCase } from '../lib/casing'
 import { BashScript, Option, PositionalArg } from './bash-script.schema'
 
 const nextColumnGivenLength = (len: number) => Math.ceil((len + 1) / 4) * 4
+const MIN_ARG_PARSE_ACTION_COLUMN = 16
 
-const UNIVERSAL_OPTS = Object.freeze([
+const UNIVERSAL_OPTS: Option[] = [
     {
-        type: 'flag',
+        type: 'immediate',
         name: 'help',
         alias: 'h',
         documentation: 'Print this help and exit',
+        action: 'usage',
     },
     {
         type: 'flag',
         name: 'verbose',
         alias: 'v',
         documentation: 'Print script debug info',
+        global: true,
     },
-])
+]
 
 export const generateOptionDocs = (schema: Option[]) => {
     const allOptions: Pick<Option, 'name' | 'alias' | 'documentation'>[] = [
-        ...UNIVERSAL_OPTS,
         ...schema,
     ]
 
@@ -41,11 +43,9 @@ export const generateOptionDocs = (schema: Option[]) => {
 }
 
 const generateOptionsForUsageString = (opts: Option[]) => {
-    const flags = opts
-        .filter((opt) => opt.type === 'flag')
+    return opts
+        .filter((opt) => opt.type === 'flag' || opt.type === 'immediate')
         .filter((opt) => opt.alias)
-
-    return [...UNIVERSAL_OPTS, ...flags]
         .map((opt) => `[${optionCase(opt.alias)}]`)
         .join(' ')
 }
@@ -85,19 +85,20 @@ EOF
 }`
 }
 
-export const generateArgDefaults = (schema: Option[]) => {
-    const lines = schema.map((option) => {
-        const name = constCase(option.name)
-        switch (option.type) {
-            case 'flag':
-                return `local ${name}=0`
-            case 'param':
-                return `local ${name}='${option.default || ''}'`
-        }
-    })
-
-    return [`VERBOSE=0`, ...lines].join('\n')
-}
+export const generateArgDefaults = (schema: Option[]) =>
+    schema
+        .filter((opt) => opt.type !== 'immediate')
+        .map((option) => {
+            const name = constCase(option.name)
+            const scope = option.global ? '' : 'local '
+            switch (option.type) {
+                case 'flag':
+                    return `${scope}${name}=0`
+                case 'param':
+                    return `${scope}${name}='${option.default || ''}'`
+            }
+        })
+        .join('\n')
 
 export const generateArgParseStatements = (schema: Option[]) => {
     const inputOptionsIr = schema
@@ -108,19 +109,19 @@ export const generateArgParseStatements = (schema: Option[]) => {
                 .map(optionCase)
                 .join(' | '),
         }))
-        .map(({ matchStr, option: { type, name } }) => {
-            const varName = constCase(name)
-            switch (type) {
+        .map(({ matchStr, option }) => {
+            const varName = constCase(option.name)
+            switch (option.type) {
                 case 'flag':
                     return { matchStr, action: `${varName}=1` }
                 case 'param':
                     return { matchStr, action: `${varName}="\${2-}" ; shift` }
+                case 'immediate':
+                    return { matchStr, action: option.action }
             }
         })
 
     const optionsIr = [
-        { matchStr: '-h | --help', action: 'usage' },
-        { matchStr: '-v | --verbose   ', action: 'VERBOSE=1' },
         ...inputOptionsIr,
         { matchStr: '-?*', action: 'die "Unknown option: $1"' },
         { matchStr: '*', action: 'ARGS+=("${1-}")' },
@@ -128,7 +129,7 @@ export const generateArgParseStatements = (schema: Option[]) => {
 
     const longestOptionText = optionsIr
         .map(({ matchStr }) => matchStr.length)
-        .reduce(max, 0)
+        .reduce(max, MIN_ARG_PARSE_ACTION_COLUMN)
 
     const actionCol = nextColumnGivenLength(longestOptionText)
 
@@ -199,8 +200,13 @@ done
 ${generatePositionalParseStatements(schema.positionalArgs)}`
 
 // MAIN FUNCTION
-export const generateBashScript = (schema: BashScript) =>
-    `#!/usr/bin/env bash
+export const generateBashScript = (baseSchema: BashScript) => {
+    const schema: BashScript = {
+        ...baseSchema,
+        options: [...UNIVERSAL_OPTS, ...baseSchema.options],
+    }
+
+    return `#!/usr/bin/env bash
 
 set -Eeuo pipefail
 trap cleanup SIGINT SIGTERM ERR EXIT
@@ -246,3 +252,4 @@ die() {
 
 main "$@"
 `
+}
