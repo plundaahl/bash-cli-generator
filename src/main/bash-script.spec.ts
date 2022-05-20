@@ -20,6 +20,9 @@ test('Main E2E Test', () => {
                     },
                 },
             ],
+            positionalArgs: [
+                { name: 'First Arg', validation: { required: true } },
+            ],
         }),
     ).toBe(
         `#!/usr/bin/env bash
@@ -70,7 +73,7 @@ main() {
 
     # check required params and arguments
     [[ -z "\${PARAM-}" ]] && die "Missing required parameter: param"
-    [[ -z "\${FIRST_ARG-}" ]] && die "Missing argument: first arg"
+    [[ -z "\${FIRST_ARG-}" ]] && die "Missing required argument: first-arg"
 
     action
 

@@ -15,6 +15,14 @@ export type Option = {
       }
 )
 
+export type PositionalArg = {
+    name: string
+    validation?: {
+        required?: boolean
+    }
+}
+
 export interface BashScript {
     options: Option[]
+    positionalArgs?: PositionalArg[]
 }

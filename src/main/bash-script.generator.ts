@@ -1,5 +1,5 @@
 import { indent, max, constCase, optionCase, kebabCase } from '../lib/casing'
-import { BashScript, Option } from './bash-script.schema'
+import { BashScript, Option, PositionalArg } from './bash-script.schema'
 
 const nextColumnGivenLength = (len: number) => Math.ceil((len + 1) / 4) * 4
 
@@ -116,9 +116,22 @@ export const generateArgValidators = (schema: BashScript) => {
         })
         .filter(Boolean)
 
+    const positionalArgIrs = (schema.positionalArgs || [])
+        .filter((arg) => arg.validation?.required)
+        .flatMap((arg: PositionalArg) => {
+            if (arg.validation?.required) {
+                const varName = constCase(arg.name)
+                const optName = kebabCase(arg.name)
+                const condition = `[[ -z "\${${varName}-}" ]]`
+                const message = `die "Missing required argument: ${optName}"`
+                return `${condition} && ${message}`
+            }
+        })
+
+    const allValidators = [...paramIrs, ...positionalArgIrs]
+
     return `# check required params and arguments
-${paramIrs.join('\n')}
-[[ -z "\${FIRST_ARG-}" ]] && die "Missing argument: first arg"`
+${allValidators.join('\n')}`
 }
 
 export const generateArgParser = (schema: BashScript) =>
