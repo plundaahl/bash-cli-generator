@@ -50,11 +50,26 @@ const generateOptionsForUsageString = (opts: Option[]) => {
         .join(' ')
 }
 
+const generateParamForUsageString = (opts: Option[]) =>
+    opts
+        .filter(
+            (opt) =>
+                opt.type === 'param' && opt.alias && opt.validation?.required,
+        )
+        .map((param) => {
+            const name = optionCase(param.alias)
+            const value = `${kebabCase(param.name)}-value`
+            return `${name} ${value}`
+        })
+        .join(' ')
+
 export const generateUsage = (schema: BashScript) => {
     const optUsage = generateOptionsForUsageString(schema.options)
+    const paramUsage = generateParamForUsageString(schema.options)
+
     return `usage() {
     cat <<EOF
-Usage: $(basename "\${BASH_SOURCE[0]}") ${optUsage} -p param-value arg1 [arg2...]
+Usage: $(basename "\${BASH_SOURCE[0]}") ${optUsage} ${paramUsage} arg1 [arg2...]
 
 Script description here.
 
