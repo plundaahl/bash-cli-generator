@@ -34,7 +34,7 @@ SCRIPT_DIR=$(cd "$(dirname "\${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 
 usage() {
     cat <<EOF
-Usage: $(basename "\${BASH_SOURCE[0]}") [-h] [-v] [-f] -p param_value arg1 [arg2...]
+Usage: $(basename "\${BASH_SOURCE[0]}") [-h] [-v] [-f] -p param-value arg1 [arg2...]
 
 Script description here.
 

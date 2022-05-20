@@ -33,7 +33,7 @@ export const generateOptionDocs = (schema: Option[]) => {
 export const generateUsage = (schema: BashScript) =>
     `usage() {
     cat <<EOF
-Usage: $(basename "\${BASH_SOURCE[0]}") [-h] [-v] [-f] -p param_value arg1 [arg2...]
+Usage: $(basename "\${BASH_SOURCE[0]}") [-h] [-v] [-f] -p param-value arg1 [arg2...]
 
 Script description here.
 
@@ -99,8 +99,14 @@ export const generateArgParseStatements = (schema: Option[]) => {
         .join('\n')
 }
 
-export const generatePositionalParseStatements = () =>
-    `local FIRST_ARG="\${ARGS[0]-}"; ARGS=("\${ARGS[@]:1}") # shift array`
+export const generatePositionalParseStatements = (schema: PositionalArg[]) => {
+    return schema
+        .map((arg) => {
+            const varName = constCase(arg.name)
+            return `local ${varName}="\${ARGS[0]-}"; ARGS=("\${ARGS[@]:1}") # shift array`
+        })
+        .join('\n')
+}
 
 export const generateArgValidators = (schema: BashScript) => {
     const paramIrs = schema.options
@@ -111,6 +117,7 @@ export const generateArgValidators = (schema: BashScript) => {
                 const optName = kebabCase(opt.name)
                 const condition = `[[ -z "\${${varName}-}" ]]`
                 const message = `die "Missing required parameter: ${optName}"`
+
                 return `${condition} && ${message}`
             }
         })
@@ -148,7 +155,7 @@ ${indent(generateArgParseStatements(schema.options), 4)}
 done
 
 # Positional args
-${generatePositionalParseStatements()}`
+${generatePositionalParseStatements(schema.positionalArgs)}`
 
 // MAIN FUNCTION
 export const generateBashScript = (schema: BashScript) =>
