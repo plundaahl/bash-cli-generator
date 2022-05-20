@@ -63,13 +63,17 @@ const generateParamForUsageString = (opts: Option[]) =>
         })
         .join(' ')
 
+const generateArgUsageString = (schema: BashScript) =>
+    (schema.positionalArgs || []).map((arg) => kebabCase(arg.name)).join(' ')
+
 export const generateUsage = (schema: BashScript) => {
     const optUsage = generateOptionsForUsageString(schema.options)
     const paramUsage = generateParamForUsageString(schema.options)
+    const argUsage = generateArgUsageString(schema)
 
     return `usage() {
     cat <<EOF
-Usage: $(basename "\${BASH_SOURCE[0]}") ${optUsage} ${paramUsage} arg1 [arg2...]
+Usage: $(basename "\${BASH_SOURCE[0]}") ${optUsage} ${paramUsage} ${argUsage} [args...]
 
 Script description here.
 
