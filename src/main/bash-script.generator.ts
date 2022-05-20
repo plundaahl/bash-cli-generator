@@ -3,14 +3,24 @@ import { BashScript, Option, PositionalArg } from './bash-script.schema'
 
 const nextColumnGivenLength = (len: number) => Math.ceil((len + 1) / 4) * 4
 
+const UNIVERSAL_OPTS = Object.freeze([
+    {
+        type: 'flag',
+        name: 'help',
+        alias: 'h',
+        documentation: 'Print this help and exit',
+    },
+    {
+        type: 'flag',
+        name: 'verbose',
+        alias: 'v',
+        documentation: 'Print script debug info',
+    },
+])
+
 export const generateOptionDocs = (schema: Option[]) => {
     const allOptions: Pick<Option, 'name' | 'alias' | 'documentation'>[] = [
-        { name: 'help', alias: 'h', documentation: 'Print this help and exit' },
-        {
-            name: 'verbose',
-            alias: 'v',
-            documentation: 'Print script debug info',
-        },
+        ...UNIVERSAL_OPTS,
         ...schema,
     ]
 
@@ -30,10 +40,21 @@ export const generateOptionDocs = (schema: Option[]) => {
         .join('\n')
 }
 
-export const generateUsage = (schema: BashScript) =>
-    `usage() {
+const generateOptionsForUsageString = (opts: Option[]) => {
+    const flags = opts
+        .filter((opt) => opt.type === 'flag')
+        .filter((opt) => opt.alias)
+
+    return [...UNIVERSAL_OPTS, ...flags]
+        .map((opt) => `[${optionCase(opt.alias)}]`)
+        .join(' ')
+}
+
+export const generateUsage = (schema: BashScript) => {
+    const optUsage = generateOptionsForUsageString(schema.options)
+    return `usage() {
     cat <<EOF
-Usage: $(basename "\${BASH_SOURCE[0]}") [-h] [-v] [-f] -p param-value arg1 [arg2...]
+Usage: $(basename "\${BASH_SOURCE[0]}") ${optUsage} -p param-value arg1 [arg2...]
 
 Script description here.
 
@@ -43,6 +64,7 @@ ${generateOptionDocs(schema.options)}
 EOF
   exit
 }`
+}
 
 export const generateArgDefaults = (schema: Option[]) => {
     const lines = schema.map((option) => {
