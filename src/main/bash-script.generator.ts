@@ -46,7 +46,7 @@ const generateOptionsForUsageString = (opts: Option[]) => {
     return opts
         .filter((opt) => opt.type === 'flag' || opt.type === 'immediate')
         .filter((opt) => opt.alias)
-        .map((opt) => `[${optionCase(opt.alias)}]`)
+        .map((opt) => `[${optionCase(opt.alias || '')}]`)
         .join(' ')
 }
 
@@ -57,6 +57,9 @@ const generateParamForUsageString = (opts: Option[]) =>
                 opt.type === 'param' && opt.alias && opt.validation?.required,
         )
         .map((param) => {
+            if (!param.alias) {
+                throw new Error('alias missing')
+            }
             const name = optionCase(param.alias)
             const value = `${kebabCase(param.name)}-value`
             return `${name} ${value}`
@@ -197,7 +200,7 @@ ${indent(generateArgParseStatements(schema.options), 4)}
 done
 
 # Positional args
-${generatePositionalParseStatements(schema.positionalArgs)}`
+${generatePositionalParseStatements(schema.positionalArgs || [])}`
 
 // MAIN FUNCTION
 export const generateBashScript = (baseSchema: BashScript) => {
