@@ -1,3 +1,5 @@
+const TAB_SIZE = 4
+
 // Composition Tools
 export const pipe =
     <T>(...fns: { (arg: T): T }[]): { (arg: T): T } =>
@@ -51,3 +53,7 @@ export const indent = (text: string, depth: number) =>
 
 // Numbers
 export const max = (a: number, b: number) => Math.max(a, b)
+
+// Indentation
+export const nextColumnGivenLength = (len: number) =>
+    Math.ceil((len + 1) / TAB_SIZE) * TAB_SIZE
