@@ -22,6 +22,7 @@ export type Option = {
 
 export type PositionalArg = {
     name: string
+    global?: boolean
     validation?: {
         required?: boolean
     }

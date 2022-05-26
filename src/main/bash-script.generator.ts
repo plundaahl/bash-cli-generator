@@ -122,7 +122,8 @@ export const generatePositionalParseStatements = (schema: PositionalArg[]) => {
     return schema
         .map((arg) => {
             const varName = constCase(arg.name)
-            return `local ${varName}="\${ARGS[0]-}"; ARGS=("\${ARGS[@]:1}") # shift array`
+            const scopeStr = arg.global ? '' : 'local '
+            return `${scopeStr}${varName}="\${ARGS[0]-}"; ARGS=("\${ARGS[@]:1}") # shift array`
         })
         .join('\n')
 }
