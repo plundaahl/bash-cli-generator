@@ -42,41 +42,15 @@ export const generateOptionDocs = (schema: Option[]) => {
         .join('\n')
 }
 
-const generateOptionsForUsageString = (opts: Option[]) => {
-    return opts
-        .filter((opt) => opt.type === 'flag' || opt.type === 'immediate')
-        .filter((opt) => opt.alias)
-        .map((opt) => `[${optionCase(opt.alias || '')}]`)
-        .join(' ')
-}
-
-const generateParamForUsageString = (opts: Option[]) =>
-    opts
-        .filter(
-            (opt) =>
-                opt.type === 'param' && opt.alias && opt.validation?.required,
-        )
-        .map((param) => {
-            if (!param.alias) {
-                throw new Error('alias missing')
-            }
-            const name = optionCase(param.alias)
-            const value = `${kebabCase(param.name)}-value`
-            return `${name} ${value}`
-        })
-        .join(' ')
-
 const generateArgUsageString = (schema: BashScript) =>
     (schema.positionalArgs || []).map((arg) => kebabCase(arg.name)).join(' ')
 
 export const generateUsage = (schema: BashScript) => {
-    const optUsage = generateOptionsForUsageString(schema.options)
-    const paramUsage = generateParamForUsageString(schema.options)
     const argUsage = generateArgUsageString(schema)
 
     return `usage() {
     cat <<EOF
-Usage: $(basename "\${BASH_SOURCE[0]}") ${optUsage} ${paramUsage} ${argUsage} [args...]
+Usage: $(basename "\${BASH_SOURCE[0]}") [options] ${argUsage} [args...]
 
 Script description here.
 
