@@ -103,7 +103,7 @@ export const generateArgDefaults = (schema: Option[]) =>
         })
         .join('\n')
 
-export const generateArgParseStatements = (schema: Option[]) => {
+export const generateOptionParseStatements = (schema: Option[]) => {
     const inputOptionsIr = schema
         .map((option) => ({
             option,
@@ -194,7 +194,7 @@ ${generateArgDefaults(schema.options)}
 local ARGS=()
 while [ $# -gt 0 ]; do
     case "\${1-}" in
-${indent(generateArgParseStatements(schema.options), 4)}
+${indent(generateOptionParseStatements(schema.options), 4)}
     esac
     shift
 done
